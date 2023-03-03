@@ -30,7 +30,7 @@ contract TestContentStore is Ownable {
     content.publishContent(cid1);
 
     assertExistsEquals(cid1, true);
-    assertAuthorEquals(currentAddress, cid1);
+    assertAuthorEquals(cid1, currentAddress);
     assertTipsEquals(cid1, 0);
 
     assertEmptyVersion(cid1);
@@ -80,7 +80,7 @@ contract TestContentStore is Ownable {
     Assert.equal(ownerBalanceAfter, ownerBalanceBefore + tip, "");
 
     assertExistsEquals(cid2, true);
-    assertAuthorEquals(emptyAddress, cid2);
+    assertAuthorEquals(cid2, emptyAddress);
     assertTipsEquals(cid2, tip);
     assertEmptyVersion(cid2);
   }
@@ -88,14 +88,14 @@ contract TestContentStore is Ownable {
   function testPublishNewVersionForKnownAuthor() public {
     assertExistsEquals(cid1, true);
     assertExistsEquals(cid3, false);
-    
+
     content.publishNewVersionForContent(cid3, cid1);
-    
+
     assertExistsEquals(cid3, true);
-    assertAuthorEquals(currentAddress, cid3);
+    assertAuthorEquals(cid3, currentAddress);
     assertTipsEquals(cid3, 0);
 
-    Version memory prevVersion = contentVersion(cid1); 
+    Version memory prevVersion = contentVersion(cid1);
     Version memory expPrevVersion = Version({
       hasNext: true,
       number: 0,
@@ -141,7 +141,7 @@ contract TestContentStore is Ownable {
     );
     Assert.isFalse(success, "");
 
-    // Publish new version for anonymous content 
+    // Publish new version for anonymous content
     (success,) = address(content).call(
       abi.encodeCall(ContentStore.publishNewVersionForContent, (cid5, cid2))
     );
@@ -155,15 +155,15 @@ contract TestContentStore is Ownable {
   }
 
   function testWithdraw() public {
-    uint balanceBefore = currentAddress.balance; 
+    uint balanceBefore = currentAddress.balance;
     uint withdrawableBefore = content.accountBalances(currentAddress);
     Assert.isAbove(withdrawableBefore, 0, "");
 
     content.withdraw();
 
-    uint balanceAfter = currentAddress.balance; 
+    uint balanceAfter = currentAddress.balance;
     uint withdrawableAfter = content.accountBalances(currentAddress);
-  
+
     Assert.equal(withdrawableAfter, 0, "");
     Assert.equal(balanceAfter, balanceBefore + withdrawableBefore, "");
   }
@@ -187,7 +187,7 @@ contract TestContentStore is Ownable {
     Assert.equal(version.nextCID, expVersion.nextCID, "expect nextCID to match provided");
   }
 
-  function assertAuthorEquals(address expAuthor, bytes32 cid) public {
+  function assertAuthorEquals(bytes32 cid, address expAuthor) public {
     address author = contentAuthor(cid);
     Assert.equal(author, expAuthor, "expect author to match provided");
   }
