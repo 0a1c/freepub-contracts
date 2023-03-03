@@ -17,6 +17,9 @@ contract TestContentStore is Ownable {
 
   bytes32 constant cid1 = bytes32(bytes("QmcJw6x4bQr7oFnVnF6i8SLcJvhXjaxWvj54FYXmZ4Ct6p"));
   bytes32 constant cid2 = bytes32(bytes("Qmf412jQZiuVUtdgnB36FXFX7xg5V6KEbSJ4dpQuhkLyfD"));
+  bytes32 constant cid3 = bytes32(bytes("QmT1vneKp5pwvxUY12SGBYzWGqHJTjR4ykWMRyLgLwX43J"));
+  bytes32 constant cid4 = bytes32(bytes("QmW3J3czdUzxRaaN31Gtu5T1U5br3t631b8AHdvxHdsHWg"));
+  bytes32 constant cid5 = bytes32(bytes("QmTzfiBqmERArXmnFt7D3ABD1TqGPiV8njktV7yssEfzBj"));
   bytes32 constant emptyBytes32 = bytes32(bytes(""));
 
   uint constant tip = 42;
@@ -37,7 +40,7 @@ contract TestContentStore is Ownable {
     Version memory version = contentVersion(cid);
 
     Assert.equal(version.hasNext, false, "");
-    Assert.equal(version.version, 0, "");
+    Assert.equal(version.number, 0, "");
     Assert.equal(version.previousCID, emptyBytes32, "");
     Assert.equal(version.nextCID, emptyBytes32, "");
   }
@@ -80,6 +83,82 @@ contract TestContentStore is Ownable {
     assertAuthorEquals(emptyAddress, cid2);
     assertTipsEquals(tip, cid2);
     assertEmptyVersion(cid2);
+  }
+
+  function testPublishNewVersionForKnownAuthor() public {
+    assertExistsEquals(true, cid1);
+    assertExistsEquals(false, cid3);
+    
+    content.publishNewVersionForContent(cid3, cid1);
+    
+    assertExistsEquals(true, cid3);
+    assertAuthorEquals(currentAddress, cid3);
+    assertTipsEquals(0, cid3);
+
+    Version memory prevVersion = contentVersion(cid1); 
+    Version memory expPrevVersion = Version({
+      hasNext: true,
+      number: 0,
+      previousCID: emptyBytes32,
+      nextCID: cid3
+    });
+    assertVersionEquals(expPrevVersion, prevVersion);
+
+    Version memory expCurVersion = Version({
+      hasNext: false,
+      number: 1,
+      previousCID: cid1,
+      nextCID: emptyBytes32
+    });
+    Version memory curVersion = contentVersion(cid3);
+    assertVersionEquals(expCurVersion, curVersion);
+  }
+
+  function testPublishNewVersionFailures() public {
+    assertExistsEquals(true, cid1);
+    assertExistsEquals(true, cid2);
+    assertExistsEquals(true, cid3);
+    assertExistsEquals(false, cid4);
+    assertExistsEquals(false, cid5);
+
+    bool success;
+
+    // Attempt to re-publish content
+    (success,) = address(content).call(
+      abi.encodeCall(ContentStore.publishNewVersionForContent, (cid2, cid3))
+    );
+    Assert.isFalse(success, "");
+
+    // Attempt circular update
+    (success,) = address(content).call(
+      abi.encodeCall(ContentStore.publishNewVersionForContent, (cid1, cid3))
+    );
+    Assert.isFalse(success, "");
+
+    // Attempt to publish new version for non-existent content
+    (success,) = address(content).call(
+      abi.encodeCall(ContentStore.publishNewVersionForContent, (cid5, cid4))
+    );
+    Assert.isFalse(success, "");
+
+    // Attempt to publish new version for anonymous content 
+    (success,) = address(content).call(
+      abi.encodeCall(ContentStore.publishNewVersionForContent, (cid5, cid2))
+    );
+    Assert.isFalse(success, "");
+
+    // Attempt to publish new version for content that hasNext
+    (success,) = address(content).call(
+      abi.encodeCall(ContentStore.publishNewVersionForContent, (cid5, cid1))
+    );
+    Assert.isFalse(success, "");
+  }
+
+  function assertVersionEquals(Version memory expVersion, Version memory version) public {
+    Assert.equal(version.hasNext, expVersion.hasNext, "expect hasNext to match provided");
+    Assert.equal(version.number, expVersion.number, "expect number to match provided");
+    Assert.equal(version.previousCID, expVersion.previousCID, "expect previousCID to match provided");
+    Assert.equal(version.nextCID, expVersion.nextCID, "expect nextCID to match provided");
   }
 
   function assertAuthorEquals(address expAuthor, bytes32 cid) public {

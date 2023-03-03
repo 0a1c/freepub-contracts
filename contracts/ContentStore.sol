@@ -14,7 +14,7 @@ struct Metadata {
 
 struct Version {
 	bool hasNext;
-	uint64 version;
+	uint64 number;
 
 	bytes32 previousCID;
 	bytes32 nextCID;
@@ -36,17 +36,17 @@ contract ContentStore is Ownable {
 	}
 
 	function updateStateForTip(bytes32 cid, uint tip) private {
-		address author = metadata[cid].author;
-		updateAuthorBalance(author, tip);
+		updateBalanceForContentAuthor(cid, tip);
 		metadata[cid].tips += tip;
 	}
 
-	function updateAuthorBalance(address account, uint tip) private {
+	function updateBalanceForContentAuthor(bytes32 cid, uint tip) private {
+		address author = metadata[cid].author;
 		address empty;
-		if (account == empty) {
+		if (author == empty) {
 			accountBalances[owner()] += tip;
 		} else {
-			accountBalances[account] += tip;
+			accountBalances[author] += tip;
 		}
 	}
 
@@ -55,22 +55,38 @@ contract ContentStore is Ownable {
 		storeContentAsAuthor(cid);
 	}
 
-	function updateContent(
+	function publishNewVersionForContent(
 		bytes32 cid,
 		bytes32 previousCID 
 	) public {
-		// TODO
-		// Update an existing repository by adding a new version
-		// Enforce a valid update based on previousCID and increment
-		// the version number automatically
+		requireNewVersionIsValid(cid, previousCID);
+		publishContent(cid);
+		updateStateForNewVersion(cid, previousCID);
 	}
 
-	function isUpdateValid(
+	function requireNewVersionIsValid(
+		bytes32 cid,
 		bytes32 previousCID 
-	) public returns (bool) {
-		// TODO
-		// Return a boolean corresponding to whether an update is valid
-		// given the previous CID (`hasNext` is false, the previous CID exists)
+	) private view {
+		bool previousContentExists = contentExists(previousCID);
+		require(previousContentExists, "cannot update for content that is not stored");
+
+		bool contentIsLatest = !metadata[previousCID].version.hasNext;
+		require(contentIsLatest, "cannot update for content that has a next version");
+
+		bool authorIsSender = metadata[previousCID].author == msg.sender;
+		require(authorIsSender, "cannot update as sender is not the author");
+
+		bool isCircularVersion = metadata[previousCID].version.nextCID == cid;
+		require(!isCircularVersion, "cannot update version circular");
+	}
+
+	function updateStateForNewVersion(bytes32 cid, bytes32 previousCID) private {
+		metadata[cid].version.number = metadata[previousCID].version.number + 1;
+		metadata[cid].version.previousCID = previousCID;
+
+		metadata[previousCID].version.nextCID = cid;
+		metadata[previousCID].version.hasNext = true;
 	}
 
 	function requireContentIsNew(bytes32 cid) private view {
