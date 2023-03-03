@@ -26,7 +26,8 @@ contract ContentStore is Ownable {
 
 	mapping (address => uint) public accountBalances;
 
-	uint32 public constant ownersCutInBPS = 100;
+	uint32 public constant ownersCutInBPS = 500;
+	uint32 public constant totalBPS = 10_000;
 
 	function tipContent(bytes32 cid) public payable {
 		if (!contentExists(cid)) {
@@ -46,7 +47,9 @@ contract ContentStore is Ownable {
 		if (author == empty) {
 			accountBalances[owner()] += tip;
 		} else {
-			accountBalances[author] += tip;
+			uint ownersTip = (ownersCutInBPS * tip) / totalBPS;
+			accountBalances[owner()] += ownersTip;
+			accountBalances[author] += tip - ownersTip;
 		}
 	}
 

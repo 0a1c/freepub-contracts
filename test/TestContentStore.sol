@@ -57,11 +57,17 @@ contract TestContentStore is Ownable {
     assertExistsEquals(cid1, true);
 
     address author = contentAuthor(cid1);
-    uint balanceBefore = content.accountBalances(author);
-    content.tipContent{value: tip}(cid1);
-    uint balanceAfter = content.accountBalances(author);
+    uint authorBalanceBefore = content.accountBalances(author);
+    uint ownerBalanceBefore = content.accountBalances(owner());
 
-    Assert.equal(balanceAfter, balanceBefore + tip, "");
+    content.tipContent{value: tip}(cid1);
+
+    uint authorBalanceAfter = content.accountBalances(author);
+    uint ownerBalanceAfter = content.accountBalances(owner());
+
+    uint expOwnersTip = (content.ownersCutInBPS() * tip) / content.totalBPS();
+    Assert.equal(authorBalanceAfter, authorBalanceBefore + tip - expOwnersTip, "");
+    Assert.equal(ownerBalanceAfter, ownerBalanceBefore + expOwnersTip, "");
   }
 
   function testTipContentForNewRepository() public {
