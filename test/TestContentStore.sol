@@ -174,7 +174,16 @@ contract TestContentStore is Ownable {
     Assert.equal(balanceAfter, balanceBefore + withdrawableBefore, "");
   }
 
-  // TODO: Withdraw Failure
+  function testWithdrawFailure() public {
+    uint withdrawable = content.accountBalances(currentAddress);
+    Assert.equal(withdrawable, 0, "");
+
+    (bool success,) = address(content).call(
+      abi.encodeCall(ContentStore.withdraw, ())
+    );
+    Assert.isFalse(success, "");
+  }
+
   // TODO: Withdraw Re-Entrancy
 
   function testReceive() public {
