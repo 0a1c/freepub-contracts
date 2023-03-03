@@ -31,7 +31,7 @@ contract TestContentStore is Ownable {
 
     assertExistsEquals(cid1, true);
     assertAuthorEquals(currentAddress, cid1);
-    assertTipsEquals(0, cid1);
+    assertTipsEquals(cid1, 0);
 
     assertEmptyVersion(cid1);
   }
@@ -81,7 +81,7 @@ contract TestContentStore is Ownable {
 
     assertExistsEquals(cid2, true);
     assertAuthorEquals(emptyAddress, cid2);
-    assertTipsEquals(tip, cid2);
+    assertTipsEquals(cid2, tip);
     assertEmptyVersion(cid2);
   }
 
@@ -93,7 +93,7 @@ contract TestContentStore is Ownable {
     
     assertExistsEquals(cid3, true);
     assertAuthorEquals(currentAddress, cid3);
-    assertTipsEquals(0, cid3);
+    assertTipsEquals(cid3, 0);
 
     Version memory prevVersion = contentVersion(cid1); 
     Version memory expPrevVersion = Version({
@@ -197,7 +197,7 @@ contract TestContentStore is Ownable {
     Assert.equal(exists, expExists, "expect exists to match provided");
   }
 
-  function assertTipsEquals(uint expTips, bytes32 cid) public {
+  function assertTipsEquals(bytes32 cid, uint expTips) public {
     (, uint tips,,) = content.metadata(cid);
     Assert.equal(tips, expTips, "expect tips to match provided");
   }
