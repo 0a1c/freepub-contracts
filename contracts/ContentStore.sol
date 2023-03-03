@@ -112,7 +112,6 @@ contract ContentStore is Ownable {
 	}
 
 	receive() external payable {
-		// TODO
 		accountBalances[owner()] += msg.value;
 	}
 }

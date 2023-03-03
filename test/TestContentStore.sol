@@ -123,35 +123,44 @@ contract TestContentStore is Ownable {
 
     bool success;
 
-    // Attempt to re-publish content
+    // Re-publish content
     (success,) = address(content).call(
       abi.encodeCall(ContentStore.publishNewVersionForContent, (cid2, cid3))
     );
     Assert.isFalse(success, "");
 
-    // Attempt circular update
+    // Circular update
     (success,) = address(content).call(
       abi.encodeCall(ContentStore.publishNewVersionForContent, (cid1, cid3))
     );
     Assert.isFalse(success, "");
 
-    // Attempt to publish new version for non-existent content
+    // Publish new version for non-existent content
     (success,) = address(content).call(
       abi.encodeCall(ContentStore.publishNewVersionForContent, (cid5, cid4))
     );
     Assert.isFalse(success, "");
 
-    // Attempt to publish new version for anonymous content 
+    // Publish new version for anonymous content 
     (success,) = address(content).call(
       abi.encodeCall(ContentStore.publishNewVersionForContent, (cid5, cid2))
     );
     Assert.isFalse(success, "");
 
-    // Attempt to publish new version for content that hasNext
+    // Publish new version for content that hasNext
     (success,) = address(content).call(
       abi.encodeCall(ContentStore.publishNewVersionForContent, (cid5, cid1))
     );
     Assert.isFalse(success, "");
+  }
+
+  function testReceive() public {
+    uint ownerBalanceBefore = content.accountBalances(owner());
+    (bool success,) = address(content).call{value: tip}("");
+    uint ownerBalanceAfter = content.accountBalances(owner());
+
+    Assert.isTrue(success, "");
+    Assert.equal(ownerBalanceAfter, ownerBalanceBefore + tip, "");
   }
 
   function assertVersionEquals(Version memory expVersion, Version memory version) public {
