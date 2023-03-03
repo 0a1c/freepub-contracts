@@ -4,6 +4,7 @@ pragma solidity ^0.8.17;
 import "openzeppelin-contracts/access/Ownable.sol";
 
 // TODO: Handle forced-funds (can track a total of all balances, then let the owner withdraw the difference between contract balance and cumulative user balance)
+// TODO: Add version date
 
 struct Metadata {
 	// This is null for anonymous tx's
