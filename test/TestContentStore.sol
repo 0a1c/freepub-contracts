@@ -154,6 +154,23 @@ contract TestContentStore is Ownable {
     Assert.isFalse(success, "");
   }
 
+  function testWithdraw() public {
+    uint balanceBefore = currentAddress.balance; 
+    uint withdrawableBefore = content.accountBalances(currentAddress);
+    Assert.isAbove(withdrawableBefore, 0, "");
+
+    content.withdraw();
+
+    uint balanceAfter = currentAddress.balance; 
+    uint withdrawableAfter = content.accountBalances(currentAddress);
+  
+    Assert.equal(withdrawableAfter, 0, "");
+    Assert.equal(balanceAfter, balanceBefore + withdrawableBefore, "");
+  }
+
+  // TODO: Withdraw Failure
+  // TODO: Withdraw Re-Entrancy
+
   function testReceive() public {
     uint ownerBalanceBefore = content.accountBalances(owner());
     (bool success,) = address(content).call{value: tip}("");
@@ -194,4 +211,6 @@ contract TestContentStore is Ownable {
     (,,, Version memory version) = content.metadata(cid);
     return version;
   }
+
+  receive() external payable {}
 }

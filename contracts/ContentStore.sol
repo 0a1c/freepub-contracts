@@ -108,7 +108,10 @@ contract ContentStore is Ownable {
 	}
 
 	function withdraw() public {
-		// TODO
+		require(accountBalances[msg.sender] > 0, "no funds to withdraw");
+		uint balance = accountBalances[msg.sender];
+		accountBalances[msg.sender] = 0;
+		payable(msg.sender).transfer(balance);	
 	}
 
 	receive() external payable {
