@@ -3,6 +3,8 @@ pragma solidity ^0.8.17;
 
 import "openzeppelin-contracts/access/Ownable.sol";
 
+// TODO: Handle forced-funds
+
 struct Metadata {
 	// This is null for anonymous tx's
 	address author; 
