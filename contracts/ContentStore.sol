@@ -4,18 +4,16 @@ pragma solidity ^0.8.17;
 import "openzeppelin-contracts/access/Ownable.sol";
 
 struct Metadata {
-	bytes32 cid;
-
 	// This is null for anonymous tx's
 	address author; 
 	uint tips;
-	bool isTracked;
-	
+	bool exists;
+
 	Version version;
 }
 
 struct Version {
-	bool hasNewer;
+	bool hasNext;
 	uint64 version;
 
 	bytes32 previousCID;
@@ -23,31 +21,45 @@ struct Version {
 }
 
 contract ContentStore is Ownable {
-	bytes32[] public content;
-
+	bytes32[] public store;
 	mapping (bytes32 => Metadata) public metadata;
 
-	mapping (address => uint) public accountPendingTips;
-	mapping (bytes32 => uint) public contentTotalTips;
+	mapping (address => uint) public accountBalances;
 
 	uint32 public constant ownersCutInBPS = 100;
 
-	function tipAuthorForRepository(bytes32 cid) public payable {
-		// Add anonymous repository if mapping does not exist
-		// Increase balance for author's withdrawable
-
+	function tipContent(bytes32 cid) public payable {
+		if (!contentExists(cid)) {
+			storeContent(cid);
+		}
+		updateStateForTip(cid, msg.value);
 	}
 
-	function addPublicRepository(bytes32 cid) public {
-		// Upload a new public repository with the appropriate metadata
+	function updateStateForTip(bytes32 cid, uint tip) private {
+		address author = metadata[cid].author;
+		updateAuthorBalance(author, tip);
+		metadata[cid].tips += tip;
 	}
 
-	function updatePublicRepository(bytes32 cid) public {}
+	function updateAuthorBalance(address account, uint tip) private {
+		address empty;
+		if (account == empty) {
+			accountBalances[owner()] += tip;
+		} else {
+			accountBalances[account] += tip;
+		}
+	}
 
-	function updatePublicRepository(
+	function publishContent(bytes32 cid) public {
+		requireContentIsNew(cid);
+		storeContentAsAuthor(cid);
+	}
+
+	function updateContent(
 		bytes32 cid,
 		bytes32 previousCID 
 	) public {
+		// TODO
 		// Update an existing repository by adding a new version
 		// Enforce a valid update based on previousCID and increment
 		// the version number automatically
@@ -56,15 +68,35 @@ contract ContentStore is Ownable {
 	function isUpdateValid(
 		bytes32 previousCID 
 	) public returns (bool) {
+		// TODO
 		// Return a boolean corresponding to whether an update is valid
-		// given the previous CID (`hasNewer` is false, the previous CID exists)
+		// given the previous CID (`hasNext` is false, the previous CID exists)
 	}
 
-	function addAnonymousRepository(bytes32 cid) private {}
+	function requireContentIsNew(bytes32 cid) private view {
+		require(!contentExists(cid), "cannot perform transaction since content exists");
+	}
 
-	function withdraw() public {}
+	function contentExists(bytes32 cid) private view returns (bool) {
+		return metadata[cid].exists;
+	}
+
+	function storeContentAsAuthor(bytes32 cid) private {
+		storeContent(cid);
+		metadata[cid].author = msg.sender;
+	}
+
+	function storeContent(bytes32 cid) private {
+		metadata[cid].exists = true;
+		store.push(cid);
+	}
+
+	function withdraw() public {
+		// TODO
+	}
 
 	receive() external payable {
-		accountPendingTips[owner()] += msg.value;
+		// TODO
+		accountBalances[owner()] += msg.value;
 	}
 }
