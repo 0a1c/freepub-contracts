@@ -25,11 +25,11 @@ contract TestContentStore is Ownable {
   uint constant tip = 42;
 
   function testPublishContent() public {
-    assertExistsEquals(false, cid1);
+    assertExistsEquals(cid1, false);
 
     content.publishContent(cid1);
 
-    assertExistsEquals(true, cid1);
+    assertExistsEquals(cid1, true);
     assertAuthorEquals(currentAddress, cid1);
     assertTipsEquals(0, cid1);
 
@@ -46,7 +46,7 @@ contract TestContentStore is Ownable {
   }
 
   function testAddDuplicatePublicRepository() public {
-    assertExistsEquals(true, cid1);
+    assertExistsEquals(cid1, true);
     (bool success,) = address(content).call(
       abi.encodeCall(ContentStore.publishContent, (cid1))
     );
@@ -54,7 +54,7 @@ contract TestContentStore is Ownable {
   }
 
   function testTipContentForExistingRepository() public {
-    assertExistsEquals(true, cid1);
+    assertExistsEquals(cid1, true);
 
     address author = contentAuthor(cid1);
     uint balanceBefore = content.accountBalances(author);
@@ -65,7 +65,7 @@ contract TestContentStore is Ownable {
   }
 
   function testTipContentForNewRepository() public {
-    assertExistsEquals(false, cid2);
+    assertExistsEquals(cid2, false);
     address author = contentAuthor(cid2);
 
     uint authorBalanceBefore = content.accountBalances(author);
@@ -79,19 +79,19 @@ contract TestContentStore is Ownable {
     Assert.equal(authorBalanceAfter, authorBalanceBefore, "");
     Assert.equal(ownerBalanceAfter, ownerBalanceBefore + tip, "");
 
-    assertExistsEquals(true, cid2);
+    assertExistsEquals(cid2, true);
     assertAuthorEquals(emptyAddress, cid2);
     assertTipsEquals(tip, cid2);
     assertEmptyVersion(cid2);
   }
 
   function testPublishNewVersionForKnownAuthor() public {
-    assertExistsEquals(true, cid1);
-    assertExistsEquals(false, cid3);
+    assertExistsEquals(cid1, true);
+    assertExistsEquals(cid3, false);
     
     content.publishNewVersionForContent(cid3, cid1);
     
-    assertExistsEquals(true, cid3);
+    assertExistsEquals(cid3, true);
     assertAuthorEquals(currentAddress, cid3);
     assertTipsEquals(0, cid3);
 
@@ -115,11 +115,11 @@ contract TestContentStore is Ownable {
   }
 
   function testPublishNewVersionFailures() public {
-    assertExistsEquals(true, cid1);
-    assertExistsEquals(true, cid2);
-    assertExistsEquals(true, cid3);
-    assertExistsEquals(false, cid4);
-    assertExistsEquals(false, cid5);
+    assertExistsEquals(cid1, true);
+    assertExistsEquals(cid2, true);
+    assertExistsEquals(cid3, true);
+    assertExistsEquals(cid4, false);
+    assertExistsEquals(cid5, false);
 
     bool success;
 
@@ -192,7 +192,7 @@ contract TestContentStore is Ownable {
     Assert.equal(author, expAuthor, "expect author to match provided");
   }
 
-  function assertExistsEquals(bool expExists, bytes32 cid) public {
+  function assertExistsEquals(bytes32 cid, bool expExists) public {
     (,, bool exists,) = content.metadata(cid);
     Assert.equal(exists, expExists, "expect exists to match provided");
   }
