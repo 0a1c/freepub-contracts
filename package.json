@@ -7,18 +7,21 @@
     "test": "test"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "ganache & truffle migrate; truffle test",
     "lint": "solhint 'contracts/**/*.sol'",
+    "deploy-mumbai": "truffle migrate --network mumbai",
     "compile": "truffle compile",
-    "test": "truffle test"
+    "migrate": "truffle migrate"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "dotenv": "^16.0.3",
     "openzeppelin-contracts": "^4.0.0"
   },
   "devDependencies": {
+    "@truffle/hdwallet-provider": "^2.1.7",
     "solhint": "^3.4.0"
   }
 }
