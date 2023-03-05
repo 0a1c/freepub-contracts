@@ -11,12 +11,13 @@
     "lint": "solhint 'contracts/**/*.sol'",
     "deploy-mumbai": "truffle migrate --network mumbai",
     "compile": "truffle compile",
-    "migrate": "truffle migrate"
+    "migrate": "truffle migrate --network mumbai; truffle migrate --network arbitrumGoerli"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@axelar-network/axelar-gmp-sdk-solidity": "^3.2.1",
     "dotenv": "^16.0.3",
     "openzeppelin-contracts": "^4.0.0"
   },
